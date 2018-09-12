@@ -1,0 +1,9 @@
+{
+  "name": "Sprach",
+  "version": "0.0.1",
+  "description": "An open-source text based messaging service",
+  "dependencies": {
+    "express": "^4.16.2",
+    "socket.io": "^2.0.4"
+  }
+}

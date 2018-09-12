@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+      <title>Sprach Webchat</title>
+      <style>
+         body {
+         margin: 0;
+         }
+         #messages tr { padding: 5px 10px; color: silver; }
+         #messages tr:nth-child(even) { color: black; background: linear-gradient(rgba(169, 169, 169, .5), rgba(169, 169, 169, .5)), url(img/grad.jpg); }
+         .container{
+         width: 100%;
+         display: flex;
+         height: 100vh;
+         justify-content: center;
+         background: linear-gradient(rgba(41, 48, 58, .5), rgba(33, 39, 48, .5)), url(img/grad.jpg);
+         }
+         .content {
+         border-style: solid;
+         border-bottom-style: none;
+         border-top-style: none;
+         border-left-color: #1b1b1c;
+         border-right-color: #1b1b1c;
+         background: linear-gradient(rgba(64, 101, 165, .5), rgba(50, 82, 137, .5)), url(img/grad.jpg);
+         border-width: 2px;
+         width: 60vw;
+         height: 100vh;
+         align-self: center;
+         }
+         * { margin: 0; padding: 0; box-sizing: border-box; }
+         body { font: 13px Helvetica, Arial; background: #cecece; }
+         form { background: #949696; padding: 5.8px; position: fixed; bottom: 0; border-radius: 0px; }
+         form input { border: 0; padding: 10px; margin-right: .7%; }
+      </style>
+   </head>
+   <body>
+      <div class="container">
+         <div class="content">
+            <!--Website Layout-->
+            <!--Adaptive server side Table.-->
+            <div class="col-xs-12" style="overflow-y: auto; overflow-x: hidden; height: 90.8vh;">
+               <table id="messages" id="messages" style="width: 58vw;">
+               </table>
+            </div>
+            <img id="image" src="">
+            <form class="from-control col-xs-12">
+               <!--Username input and send button.-->
+               <div class="form-group">
+                  <div class="col-xs-11"><input class="form-control" id="u" autocomplete="off" maxlength="100" placeholder="Username" required /></div>
+                  <button class="btn btn-primary col-xs-1" id="btnSub">Send</button>
+               </div>
+               <div class="form-group">
+                <div class="col-xs-12" style="height: .8vh;"></div>
+               </div>
+               <!--Message input and picture input.-->
+               <div class="form-group">
+                  <div class="col-xs-11"><input class="form-control" id="m" autocomplete="off" maxlength="100000" /></div>
+                  <label class="btn btn-primary btn-file col-xs-1">Browse <input type="file" style="display: none;" onchange="fileAsURL(this)"></label>
+               </div>
+               <!--String storages-->
+               <input id="i" /><input id="zyx" />
+            </form>
+         </div>
+      </div>
+      <script>
+        //Variables
+        var nameusers = [];
+        var spiel = 0;
+        //Hides Image URL and other storing features.
+        $('#i').hide();
+        $('#zyx').hide();
+        //URL Converter
+        function fileAsURL(element) {
+          var file = element.files[0];
+          var reader = new FileReader();
+          reader.onloadend = function() {
+            document.getElementById('i').value = reader.result;
+          }
+          reader.readAsDataURL(file);
+        }
+         
+        $(function () {
+          var socket = io();
+          $('form').submit(function(){
+             setTimeout(function(){ //Decreases click counter every 5s.
+              if (spiel > 0) { 
+                 spiel -= 1;
+               } 
+             }, 5000); 
+             spiel += 1; //Increases click counter on form submit.
+             //Disables sending capabilities after the user has clicked 5 times in 5s.
+            if (spiel > 5) {
+              $('#btnSub').prop('disabled', true);
+              setTimeout(function(){ 
+                 $('#btnSub').prop('disabled', false); //Enables sending capabilities.
+              }, 5000);
+            };
+            socket.emit('username', $('#u').val()); //Send username
+            $('#u').prop('disabled', true); //Disables editing of username.
+            socket.emit('chat message', $('#m').val());
+            socket.emit('picture', $('#i').val());
+            $('#m').val('');
+            $('#p').val('');
+            $('#i').val('');
+            return false;
+          });
+          socket.on('chat message', function(msg){
+            $('#messages').append($('<tr>').text(msg)); //Displays message.
+          });
+          socket.on('picture', function(pic){
+            $('#messages').append($('<tr>').append($('<img>').attr("src", pic))); //Displays picture.
+            $('#messages').append($('<tr>').text(""));
+          });
+          socket.on('username', function(use){
+            var alternate = document.getElementById('zyx').value; //Sets value of previous username.
+            var userna = document.getElementById('u').value; //Sets value of current username.
+            var idon = nameusers.indexOf(use);
+            if (idon == -1) {
+              $('#messages').append($('<tr>').text(use)); //Displays username.
+              var xyz = document.getElementById('u').value;
+              document.getElementById('zyx').value = xyz;
+            }else if (userna == alternate) { //Determines whether the user previously used the username.
+              $('#messages').append($('<tr>').text(use)); //Displays username.
+            }else{ //If username is 
+              $('#messages').append($('<tr>').text("Unknown")); //Displays username.
+              alert("Someone already has that username!");
+              $('#u').prop('disabled', false);
+            }
+            nameusers.push(use);
+          });
+        });
+      </script>
+   </body>
+</html>
