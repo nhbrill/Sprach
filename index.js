@@ -2,16 +2,11 @@
 
 var express = require("express");
 var app = express();
-var http = require('http').Server(app);
+var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+var socket = io.listen(http);
 
 app.use(express.static(__dirname + '/public'));
-
-//Print message to console when user connects
-
-io.on('connection', function(socket){
-  console.log('a user connected');
-});
 
 //Set port to 3000 and log to console
 
@@ -22,7 +17,9 @@ http.listen(3000, function(){
 //Log to console when user connects or disconnects
 
 io.on('connection', function(socket){
-  console.log('a user connected');
+  var socketId = socket.id;
+  var clientIp = socket.request.connection.remoteAddress;
+  console.log('a user connected ' + clientIp);
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });
